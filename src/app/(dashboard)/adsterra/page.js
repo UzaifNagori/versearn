@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, Zap, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Script from 'next/script';
 import { authHeader } from '@/lib/auth';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import AdsterraBanner from '@/components/ui/AdsterraBanner';
 
 // 50 ad buttons — each shows Adsterra banner + credits VERSE
 const AD_BUTTONS = Array.from({ length: 50 }, (_, i) => ({ id: i + 1 }));
@@ -105,28 +105,7 @@ export default function AdsterraEarnPage() {
       {/* Adsterra Banner Ad — always visible */}
       <div className="bg-[#1A1A2E] border border-[#2D2D4E] rounded-xl p-4 flex flex-col items-center">
         <p className="text-[#9CA3AF] text-xs mb-3">Sponsored Advertisement</p>
-        <div id="adsterra-banner" className="flex items-center justify-center min-h-[250px]">
-          <Script
-            id="adsterra-config"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                atOptions = {
-                  'key': 'd9ae3222809e2c23a17ab463e86c869e',
-                  'format': 'iframe',
-                  'height': 250,
-                  'width': 300,
-                  'params': {}
-                };
-              `,
-            }}
-          />
-          <Script
-            id="adsterra-invoke"
-            src="https://www.highperformanceformat.com/d9ae3222809e2c23a17ab463e86c869e/invoke.js"
-            strategy="afterInteractive"
-          />
-        </div>
+        <AdsterraBanner />
       </div>
 
       {/* Click & Earn Grid */}
@@ -226,7 +205,7 @@ export default function AdsterraEarnPage() {
 
             {/* Adsterra Banner in modal */}
             <div className="flex justify-center mb-5 min-h-[250px] bg-[#0F0F1A] rounded-xl overflow-hidden">
-              <div ref={adContainerRef} id="adsterra-modal-banner" />
+              <AdsterraBanner />
             </div>
 
             <button
