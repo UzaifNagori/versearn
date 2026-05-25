@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
+import MonatagAds from "@/components/MonatagAds";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,26 +47,20 @@ export default function RootLayout({ children }) {
           }}
         />
         {children}
-        {/* Monetag Service Worker */}
+        {/* Monetag Service Worker — sab pages pe */}
         <Script id="monetag-sw" strategy="afterInteractive">{`
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' });
           }
         `}</Script>
-        {/* Monetag OnClick Ad Tag */}
-        <Script id="monetag-onclick" strategy="afterInteractive">{`
-          (function(s){s.dataset.zone='11056557',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
-        `}</Script>
-        {/* Monetag Push Notification Tag */}
+        {/* Monetag Push Notification — sab pages pe */}
         <Script
           src="https://5gvci.com/act/files/tag.min.js?z=11056591"
           data-cfasync="false"
           strategy="afterInteractive"
         />
-        {/* Monetag In-Page Push Banner Tag */}
-        <Script id="monetag-inpage" strategy="afterInteractive">{`
-          (function(s){s.dataset.zone='11056594',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
-        `}</Script>      </body>
+        {/* OnClick + InPage — sirf dashboard pages pe */}
+        <MonatagAds />      </body>
     </html>
   );
 }
