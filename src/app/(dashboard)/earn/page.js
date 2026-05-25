@@ -58,13 +58,8 @@ export default function EarnPage() {
 
   const startAd = () => {
     if (adsEarned >= AD_LIMIT) { toast.error('Aaj ki ad limit poori ho gayi!'); return; }
-    // Vignette ad trigger karo — Monetag script automatically show karega
-    // Direct link bhi backup ke taur pe
-    if (typeof window !== 'undefined' && window.__monetag_vignette) {
-      window.__monetag_vignette.show();
-    } else {
-      window.open(MONETAG_DIRECT_LINK, '_blank');
-    }
+    // Direct Link ad open karo new tab mein
+    window.open(MONETAG_DIRECT_LINK, '_blank');
     setAdWatching(true);
     setAdTimer(30);
     setAdDone(false);
@@ -235,7 +230,7 @@ export default function EarnPage() {
             <p className="text-[#9CA3AF] text-xs">VERSE aaj</p>
           </div>
         </div>
-        <div className="border-2 border-dashed border-[#2D2D4E] rounded-xl h-48 flex items-center justify-center mb-4 bg-[#0F0F1A] relative overflow-hidden">
+        <div className="border-2 border-dashed border-[#2D2D4E] rounded-xl h-48 flex items-center justify-center mb-4 bg-[#0F0F1A]">
           {adWatching ? (
             <div className="text-center px-4">
               <div className="text-4xl mb-2">📺</div>
@@ -246,12 +241,13 @@ export default function EarnPage() {
           ) : adDone ? (
             <div className="text-center">
               <CheckCircle className="w-12 h-12 text-[#10B981] mx-auto mb-2" />
-              <p className="text-[#10B981] font-bold">+1 VERSE mila!</p>
+              <p className="text-[#10B981] font-bold">+0.5 VERSE mila!</p>
             </div>
           ) : (
             <div className="text-center text-[#9CA3AF]">
               <Tv className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Ad yahan dikhega</p>
+              <p className="text-sm">Button click karo — ad naye tab mein khulega</p>
+              <p className="text-xs mt-1 text-[#7C3AED]">30 second baad VERSE milega</p>
             </div>
           )}
         </div>
