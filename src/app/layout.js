@@ -16,6 +16,9 @@ export const metadata = {
   title: "VerseEarn — Ghar Baithe Kamao",
   description:
     "VerseEarn pe VERSE tokens kamao — ads dekho, surveys karo, walk karo aur NFTs banao. Pakistan ka #1 earning platform.",
+  other: {
+    monetag: 'f87e1b747adaf0e2716b656ccfa54a1e',
+  },
 };
 
 export default function RootLayout({ children }) {
