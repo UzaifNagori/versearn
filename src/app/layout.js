@@ -51,6 +51,10 @@ export default function RootLayout({ children }) {
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js', { scope: '/' });
           }
+        `}</Script>
+        {/* Monetag OnClick Ad Tag */}
+        <Script id="monetag-onclick" strategy="afterInteractive">{`
+          (function(s){s.dataset.zone='11056557',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
         `}</Script>      </body>
     </html>
   );
