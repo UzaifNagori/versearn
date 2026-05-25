@@ -13,17 +13,19 @@ const MOCK_SURVEYS = [
   { id: 's3', title: 'Mobile App Preferences', reward: 10, estimated_minutes: 3, category: 'Mobile' },
 ];
 
-// Sponsored links — yeh click karne pe ad new tab mein khulega + VERSE milega
-const SPONSORED_LINKS = [
-  { id: 1, title: 'Daraz Pakistan Deals', description: 'Best online shopping deals', emoji: '🛒', url: 'https://daraz.pk' },
-  { id: 2, title: 'Jazz Cash Offer', description: 'Mobile banking rewards', emoji: '💳', url: 'https://jazzcash.com.pk' },
-  { id: 3, title: 'Easypaisa Cashback', description: 'Get cashback on payments', emoji: '💰', url: 'https://easypaisa.com.pk' },
-  { id: 4, title: 'OLX Pakistan', description: 'Buy & sell anything', emoji: '📦', url: 'https://olx.com.pk' },
-  { id: 5, title: 'Foodpanda Discount', description: 'Food delivery deals', emoji: '🍔', url: 'https://foodpanda.pk' },
-];
+// 200 click buttons — sirf numbered, no names
+const CLICK_BUTTONS = Array.from({ length: 20 }, (_, i) => ({
+  id: i + 1,
+  url: [
+    'https://daraz.pk', 'https://olx.com.pk', 'https://foodpanda.pk',
+    'https://jazzcash.com.pk', 'https://easypaisa.com.pk',
+    'https://pakwheels.com', 'https://zameen.com', 'https://goto.com.pk',
+    'https://telemart.pk', 'https://shophive.com',
+  ][i % 10],
+}));
 
 const AD_LIMIT = 50;
-const CLICK_LIMIT = 20;
+const CLICK_LIMIT = 200;
 
 export default function EarnPage() {
   const [loading, setLoading] = useState(true);
@@ -136,15 +138,15 @@ export default function EarnPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
 
-      {/* Sponsored Links — Click to Earn */}
+      {/* Sponsored Clicks — Click to Earn */}
       <div className="bg-[#1A1A2E] border border-[#2D2D4E] rounded-xl p-6 shadow-lg shadow-purple-900/20">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-10 rounded-xl bg-[#F59E0B]/20 flex items-center justify-center">
             <MousePointerClick className="w-5 h-5 text-[#F59E0B]" />
           </div>
           <div>
-            <h2 className="text-white font-bold text-lg">Sponsored Links</h2>
-            <p className="text-[#9CA3AF] text-sm">Har link click = 1 VERSE</p>
+            <h2 className="text-white font-bold text-lg">Click to Earn</h2>
+            <p className="text-[#9CA3AF] text-sm">Har click = 0.5 VERSE · Max 200 clicks/day</p>
           </div>
           <div className="ml-auto text-right">
             <p className="text-[#F59E0B] font-bold">{clickEarned}/{CLICK_LIMIT}</p>
@@ -153,85 +155,61 @@ export default function EarnPage() {
         </div>
 
         {/* Progress bar */}
-        <div className="mb-4">
+        <div className="mb-5">
           <div className="h-1.5 bg-[#0F0F1A] rounded-full overflow-hidden">
             <div className="h-full bg-[#F59E0B] rounded-full transition-all"
               style={{ width: `${Math.min(100, (clickEarned / CLICK_LIMIT) * 100)}%` }} />
           </div>
+          <p className="text-[#9CA3AF] text-xs mt-1">{CLICK_LIMIT - clickEarned} clicks baaki aaj</p>
         </div>
 
         {clickEarned >= CLICK_LIMIT ? (
-          <div className="text-center py-4 bg-[#0F0F1A] rounded-xl border border-[#2D2D4E]">
-            <p className="text-[#10B981] font-bold">Aaj ki limit poori ho gayi! ✅</p>
-            <p className="text-[#9CA3AF] text-sm mt-1">Kal wapas aao aur aur VERSE kamao</p>
+          <div className="text-center py-6 bg-[#0F0F1A] rounded-xl border border-[#2D2D4E]">
+            <p className="text-[#10B981] font-bold text-lg">Aaj ki limit poori! ✅</p>
+            <p className="text-[#9CA3AF] text-sm mt-1">Kal wapas aao — 200 aur clicks milenge</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {SPONSORED_LINKS.map((link) => {
-              const isClicked = !!clickedLinks[link.id];
-              const isLoading = clickLoading === link.id;
+          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+            {CLICK_BUTTONS.map((btn) => {
+              const isClicked = !!clickedLinks[btn.id];
+              const isLoading = clickLoading === btn.id;
               return (
-                <div key={link.id}
-                  className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                <a
+                  key={btn.id}
+                  href={isClicked ? undefined : btn.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    if (isClicked) { e.preventDefault(); return; }
+                    if (clickEarned >= CLICK_LIMIT) { e.preventDefault(); toast.error('Limit poori ho gayi!'); return; }
+                    setClickLoading(btn.id);
+                    fetch('/api/earn/sponsored-click', { method: 'POST', headers: authHeader() })
+                      .then((r) => r.json())
+                      .then((data) => {
+                        if (!data.success) { toast.error(data.error || 'Error'); return; }
+                        setClickEarned(data.daily_earned);
+                        setClickedLinks((prev) => ({ ...prev, [btn.id]: true }));
+                        toast.success('+0.5 VERSE mila!');
+                      })
+                      .catch(() => toast.error('Error aya'))
+                      .finally(() => setClickLoading(null));
+                  }}
+                  className={`aspect-square flex items-center justify-center rounded-lg text-xs font-bold transition-all border ${
                     isClicked
-                      ? 'bg-[#10B981]/5 border-[#10B981]/20 opacity-60'
-                      : 'bg-[#0F0F1A] border-[#2D2D4E] hover:border-[#F59E0B]/40'
-                  }`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{link.emoji}</span>
-                    <div>
-                      <p className="text-white font-medium text-sm">{link.title}</p>
-                      <p className="text-[#9CA3AF] text-xs">{link.description}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#F59E0B] font-bold text-sm">+1 VERSE</span>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => {
-                        if (isClicked || isLoading || clickEarned >= CLICK_LIMIT) {
-                          e.preventDefault();
-                          if (clickEarned >= CLICK_LIMIT) toast.error('Aaj ki limit poori ho gayi!');
-                          return;
-                        }
-                        // Real anchor click — Monetag OnClick trigger hoga
-                        setClickLoading(link.id);
-                        fetch('/api/earn/sponsored-click', {
-                          method: 'POST',
-                          headers: authHeader(),
-                        })
-                          .then((r) => r.json())
-                          .then((data) => {
-                            if (!data.success) { toast.error(data.error || 'Error'); return; }
-                            setClickEarned(data.daily_earned);
-                            setClickedLinks((prev) => ({ ...prev, [link.id]: true }));
-                            toast.success(`+1 VERSE mila! 🎉`);
-                          })
-                          .catch(() => toast.error('Error aya'))
-                          .finally(() => setClickLoading(null));
-                      }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                        isClicked
-                          ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 pointer-events-none'
-                          : 'bg-[#F59E0B] hover:bg-[#D97706] text-black'
-                      }`}
-                    >
-                      {isLoading ? (
-                        <LoadingSpinner size="sm" />
-                      ) : isClicked ? (
-                        <><CheckCircle className="w-3 h-3" />Done</>
-                      ) : (
-                        <><ExternalLink className="w-3 h-3" />Visit</>
-                      )}
-                    </a>
-                  </div>
-                </div>
+                      ? 'bg-[#10B981]/20 border-[#10B981]/40 text-[#10B981] cursor-default'
+                      : 'bg-[#0F0F1A] border-[#2D2D4E] text-[#9CA3AF] hover:border-[#F59E0B] hover:text-[#F59E0B] hover:bg-[#F59E0B]/10 cursor-pointer'
+                  }`}
+                >
+                  {isLoading ? '...' : isClicked ? '✓' : btn.id}
+                </a>
               );
             })}
           </div>
         )}
+
+        <p className="text-[#9CA3AF] text-xs mt-4 text-center">
+          💡 Har click pe sponsored content khulega aur aapko 0.5 VERSE milega
+        </p>
       </div>
 
       {/* Watch Ads */}
