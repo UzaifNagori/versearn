@@ -55,6 +55,16 @@ export default function RootLayout({ children }) {
         {/* Monetag OnClick Ad Tag */}
         <Script id="monetag-onclick" strategy="afterInteractive">{`
           (function(s){s.dataset.zone='11056557',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
+        `}</Script>
+        {/* Monetag Push Notification Tag */}
+        <Script
+          src="https://5gvci.com/act/files/tag.min.js?z=11056591"
+          data-cfasync="false"
+          strategy="afterInteractive"
+        />
+        {/* Monetag In-Page Push Banner Tag */}
+        <Script id="monetag-inpage" strategy="afterInteractive">{`
+          (function(s){s.dataset.zone='11056594',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
         `}</Script>      </body>
     </html>
   );

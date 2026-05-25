@@ -1,31 +1,30 @@
 import mysql from 'mysql2/promise';
 
-// Connection pool — ek baar banao, baar baar use karo
+// Railway uses MYSQL_HOST, MYSQLHOST, MYSQL_USER etc.
+// Local uses DB_HOST, DB_USER etc.
+// Support both
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  database: process.env.DB_NAME || 'versearn',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
+  host:     process.env.MYSQLHOST     || process.env.MYSQL_HOST     || process.env.DB_HOST     || '127.0.0.1',
+  port:     parseInt(process.env.MYSQLPORT     || process.env.MYSQL_PORT     || process.env.DB_PORT     || '3306'),
+  database: process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || process.env.DB_NAME     || 'versearn',
+  user:     process.env.MYSQLUSER     || process.env.MYSQL_USER     || process.env.DB_USER     || 'root',
+  password: process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD || process.env.MYSQL_ROOT_PASSWORD || process.env.DB_PASSWORD || '',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
   timezone: '+00:00',
 });
 
-// Query helper — use karo: await query('SELECT * FROM users WHERE id = ?', [id])
 export async function query(sql, params = []) {
   const [rows] = await pool.execute(sql, params);
   return rows;
 }
 
-// Single row helper
 export async function queryOne(sql, params = []) {
   const rows = await query(sql, params);
   return rows[0] || null;
 }
 
-// Transaction helper
 export async function withTransaction(callback) {
   const conn = await pool.getConnection();
   await conn.beginTransaction();
