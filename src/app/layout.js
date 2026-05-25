@@ -63,7 +63,14 @@ export default function RootLayout({ children }) {
         {/* OnClick + InPage — sirf dashboard pages pe */}
         <MonatagAds />
         {/* Adsterra Social Bar + Popunder — sirf adsterra page pe */}
-        <AdsterraAds />      </body>
+        <AdsterraAds />
+        {/* Google AdSense Verification */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9139516758998452"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />      </body>
     </html>
   );
 }
