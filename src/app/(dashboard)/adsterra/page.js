@@ -7,7 +7,7 @@ import { authHeader } from '@/lib/auth';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const AD_BUTTONS = Array.from({ length: 50 }, (_, i) => ({ id: i + 1 }));
-const ADSTERRA_DIRECT_LINK = 'https://omg10.com/4/11057179';
+const ADSTERRA_DIRECT_LINK = 'https://www.effectivecpmnetwork.com/ezjwrhvk85?key=2b94b35877c810414325ab98018ddf75';
 const CLICK_LIMIT = 500;
 const VERSE_PER_CLICK = 0.5;
 

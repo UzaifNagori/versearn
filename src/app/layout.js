@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import Script from "next/script";
 import MonatagAds from "@/components/MonatagAds";
+import AdsterraAds from "@/components/AdsterraAds";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -60,7 +61,9 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
         />
         {/* OnClick + InPage — sirf dashboard pages pe */}
-        <MonatagAds />      </body>
+        <MonatagAds />
+        {/* Adsterra Social Bar + Popunder — sirf adsterra page pe */}
+        <AdsterraAds />      </body>
     </html>
   );
 }
