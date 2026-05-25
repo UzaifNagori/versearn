@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { getCurrentUser } from '@/lib/jwt';
 
-const VERSE_PER_CLICK = 0.5;    // 0.5 VERSE per click (profit margin rakho)
-const DAILY_CLICK_LIMIT = 200;  // 200 clicks/day = 100 VERSE max
-const MIN_SECONDS_BETWEEN = 3;  // 3 second gap anti-fraud
+const VERSE_PER_CLICK = 0.1;    // 0.1 VERSE per click — safe profit margin
+const DAILY_CLICK_LIMIT = 500;  // 500 clicks/day max
+const MIN_SECONDS_BETWEEN = 2;  // 2 second gap anti-fraud
 
 export async function POST(request) {
   try {

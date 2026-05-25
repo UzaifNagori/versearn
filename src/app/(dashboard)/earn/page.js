@@ -13,8 +13,8 @@ const MOCK_SURVEYS = [
   { id: 's3', title: 'Mobile App Preferences', reward: 10, estimated_minutes: 3, category: 'Mobile' },
 ];
 
-// 200 click buttons — sirf numbered, no names
-const CLICK_BUTTONS = Array.from({ length: 20 }, (_, i) => ({
+// 50 click buttons shown, 500 total limit
+const CLICK_BUTTONS = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
   url: [
     'https://daraz.pk', 'https://olx.com.pk', 'https://foodpanda.pk',
@@ -24,8 +24,8 @@ const CLICK_BUTTONS = Array.from({ length: 20 }, (_, i) => ({
   ][i % 10],
 }));
 
-const AD_LIMIT = 50;
-const CLICK_LIMIT = 200;
+const AD_LIMIT = 100;
+const CLICK_LIMIT = 500;
 
 export default function EarnPage() {
   const [loading, setLoading] = useState(true);
@@ -146,7 +146,7 @@ export default function EarnPage() {
           </div>
           <div>
             <h2 className="text-white font-bold text-lg">Click to Earn</h2>
-            <p className="text-[#9CA3AF] text-sm">Har click = 0.5 VERSE · Max 200 clicks/day</p>
+            <p className="text-[#9CA3AF] text-sm">Har click = 0.1 VERSE · Max 500 clicks/day</p>
           </div>
           <div className="ml-auto text-right">
             <p className="text-[#F59E0B] font-bold">{clickEarned}/{CLICK_LIMIT}</p>
@@ -166,7 +166,7 @@ export default function EarnPage() {
         {clickEarned >= CLICK_LIMIT ? (
           <div className="text-center py-6 bg-[#0F0F1A] rounded-xl border border-[#2D2D4E]">
             <p className="text-[#10B981] font-bold text-lg">Aaj ki limit poori! ✅</p>
-            <p className="text-[#9CA3AF] text-sm mt-1">Kal wapas aao — 200 aur clicks milenge</p>
+            <p className="text-[#9CA3AF] text-sm">Kal wapas aao — 500 aur clicks milenge</p>
           </div>
         ) : (
           <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
@@ -189,7 +189,7 @@ export default function EarnPage() {
                         if (!data.success) { toast.error(data.error || 'Error'); return; }
                         setClickEarned(data.daily_earned);
                         setClickedLinks((prev) => ({ ...prev, [btn.id]: true }));
-                        toast.success('+0.5 VERSE mila!');
+                        toast.success('+0.1 VERSE mila!');
                       })
                       .catch(() => toast.error('Error aya'))
                       .finally(() => setClickLoading(null));
@@ -208,7 +208,7 @@ export default function EarnPage() {
         )}
 
         <p className="text-[#9CA3AF] text-xs mt-4 text-center">
-          💡 Har click pe sponsored content khulega aur aapko 0.5 VERSE milega
+          💡 Har click pe sponsored content khulega aur aapko 0.1 VERSE milega
         </p>
       </div>
 

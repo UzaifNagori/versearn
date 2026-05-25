@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/db';
 import { getCurrentUser } from '@/lib/jwt';
 
-const AD_LIMIT = 50;
-const MIN_SECONDS_BETWEEN_ADS = 25; // anti-fraud: minimum 25 seconds
+// Safe rates — aapko milta hai > user ko deta hai
+// Monetag se per ad view: ~$0.001-0.005
+// User ko dena: 0.5 VERSE = $0.0005 — safe profit
+const VERSE_PER_AD = 0.5;
+const AD_LIMIT = 100;             // 100 ads/day max
+const MIN_SECONDS_BETWEEN_ADS = 25;
 
 export async function POST(request) {
   try {
@@ -25,7 +29,7 @@ export async function POST(request) {
       const secondsSinceLast = (now - lastAdTime) / 1000;
       if (secondsSinceLast < MIN_SECONDS_BETWEEN_ADS) {
         return NextResponse.json({
-          error: `Thoda wait karo! ${Math.ceil(MIN_SECONDS_BETWEEN_ADS - secondsSinceLast)} seconds baad try karo.`
+          error: `${Math.ceil(MIN_SECONDS_BETWEEN_ADS - secondsSinceLast)} seconds baad try karo`
         }, { status: 429 });
       }
     }
@@ -35,47 +39,44 @@ export async function POST(request) {
       'SELECT * FROM daily_limits WHERE user_id = ? AND date = ?',
       [userId, today]
     );
-    const adsEarned = existing?.ads_earned || 0;
+    const adsEarned = Number(existing?.ads_earned || 0);
 
     if (adsEarned >= AD_LIMIT) {
-      return NextResponse.json({ error: 'Aaj ki ad limit poori ho gayi (50 VERSE)' }, { status: 400 });
+      return NextResponse.json({ error: `Aaj ki ad limit poori ho gayi (${AD_LIMIT} VERSE)` }, { status: 400 });
     }
 
-    // Update last_ad_watched_at
     await query('UPDATE users SET last_ad_watched_at = NOW() WHERE id = ?', [userId]);
 
-    // Update daily limits
     if (existing) {
       await query(
-        'UPDATE daily_limits SET ads_earned = ads_earned + 1 WHERE user_id = ? AND date = ?',
-        [userId, today]
+        'UPDATE daily_limits SET ads_earned = ads_earned + ? WHERE user_id = ? AND date = ?',
+        [VERSE_PER_AD, userId, today]
       );
     } else {
       await query(
-        'INSERT INTO daily_limits (user_id, date, ads_earned) VALUES (?, ?, 1)',
-        [userId, today]
+        'INSERT INTO daily_limits (user_id, date, ads_earned) VALUES (?, ?, ?)',
+        [userId, today, VERSE_PER_AD]
       );
     }
 
-    // Credit 1 VERSE
     await query(
-      'UPDATE users SET verse_balance = verse_balance + 1, total_earned = total_earned + 1 WHERE id = ?',
-      [userId]
+      'UPDATE users SET verse_balance = verse_balance + ?, total_earned = total_earned + ? WHERE id = ?',
+      [VERSE_PER_AD, VERSE_PER_AD, userId]
     );
 
     await query(
       `INSERT INTO transactions (user_id, type, amount, description, status)
-       VALUES (?, 'earn_ad', 1, 'Ad watch reward', 'completed')`,
-      [userId]
+       VALUES (?, 'earn_ad', ?, 'Ad watch reward', 'completed')`,
+      [userId, VERSE_PER_AD]
     );
 
     const updatedUser = await queryOne('SELECT verse_balance FROM users WHERE id = ?', [userId]);
 
     return NextResponse.json({
       success: true,
-      verse_earned: 1,
+      verse_earned: VERSE_PER_AD,
       new_balance: updatedUser.verse_balance,
-      daily_remaining: AD_LIMIT - (adsEarned + 1),
+      daily_remaining: AD_LIMIT - (adsEarned + VERSE_PER_AD),
     });
   } catch (err) {
     console.error('Ad complete error:', err);
