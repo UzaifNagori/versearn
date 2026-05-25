@@ -8,7 +8,7 @@ import { mockUser } from '@/lib/mockData';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { label: 'Earn', icon: Coins, href: '/earn' },
+  { label: 'Click & Earn', icon: Coins, href: '/earn' },
   { label: 'My NFTs', icon: Image, href: '/nft' },
   { label: 'Marketplace', icon: Store, href: '/marketplace' },
   { label: 'Withdraw', icon: ArrowDownToLine, href: '/withdraw' },
