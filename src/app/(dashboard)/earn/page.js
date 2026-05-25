@@ -97,7 +97,7 @@ export default function EarnPage() {
   };
 
   // Sponsored link click handler
-  const handleSponsoredClick = useCallback(async (link) => {
+  const handleSponsoredClick = useCallback((link) => {
     if (clickEarned >= CLICK_LIMIT) {
       toast.error('Aaj ki click limit poori ho gayi!');
       return;
@@ -107,34 +107,28 @@ export default function EarnPage() {
       return;
     }
 
+    // PEHLE window open karo — user gesture pe hona chahiye
+    // Popup blocker bypass hoga
+    window.open(link.url, '_blank');
+
+    // PHIR backend call karo VERSE credit ke liye
     setClickLoading(link.id);
-
-    try {
-      const res = await fetch('/api/earn/sponsored-click', {
-        method: 'POST',
-        headers: authHeader(),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.error || 'Error aya');
-        return;
-      }
-
-      // VERSE credit ho gaya — ab actual URL open karo
-      // Monetag OnClick script automatically trigger hoga is click pe
-      setClickEarned(data.daily_earned);
-      setClickedLinks((prev) => ({ ...prev, [link.id]: true }));
-      toast.success(`+1 VERSE mila! 🎉 (${data.daily_remaining} clicks baaki)`);
-
-      // Actual sponsored URL open karo — Monetag OnClick apne aap trigger hoga
-      window.open(link.url, '_blank', 'noopener');
-
-    } catch {
-      toast.error('Error aya');
-    } finally {
-      setClickLoading(null);
-    }
+    fetch('/api/earn/sponsored-click', {
+      method: 'POST',
+      headers: authHeader(),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.success) {
+          toast.error(data.error || 'Error aya');
+          return;
+        }
+        setClickEarned(data.daily_earned);
+        setClickedLinks((prev) => ({ ...prev, [link.id]: true }));
+        toast.success(`+1 VERSE mila! 🎉 (${data.daily_remaining} clicks baaki)`);
+      })
+      .catch(() => toast.error('Error aya'))
+      .finally(() => setClickLoading(null));
   }, [clickEarned, clickedLinks]);
 
   if (loading) return <div className="flex items-center justify-center h-64"><LoadingSpinner size="lg" /></div>;
