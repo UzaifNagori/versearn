@@ -18,9 +18,13 @@ export default function MonatagAds() {
       <Script id="monetag-onclick" strategy="afterInteractive">{`
         (function(s){s.dataset.zone='11056557',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
       `}</Script>
-      {/* Monetag In-Page Push Banner Tag */}
+      {/* Monetag In-Page Push Banner */}
       <Script id="monetag-inpage" strategy="afterInteractive">{`
         (function(s){s.dataset.zone='11056594',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
+      `}</Script>
+      {/* Monetag Vignette Banner — full screen ad */}
+      <Script id="monetag-vignette" strategy="afterInteractive">{`
+        (function(s){s.dataset.zone='11057203',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))
       `}</Script>
     </>
   );

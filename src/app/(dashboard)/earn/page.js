@@ -58,8 +58,13 @@ export default function EarnPage() {
 
   const startAd = () => {
     if (adsEarned >= AD_LIMIT) { toast.error('Aaj ki ad limit poori ho gayi!'); return; }
-    // Real Monetag Direct Link ad open karo
-    window.open(MONETAG_DIRECT_LINK, '_blank');
+    // Vignette ad trigger karo — Monetag script automatically show karega
+    // Direct link bhi backup ke taur pe
+    if (typeof window !== 'undefined' && window.__monetag_vignette) {
+      window.__monetag_vignette.show();
+    } else {
+      window.open(MONETAG_DIRECT_LINK, '_blank');
+    }
     setAdWatching(true);
     setAdTimer(30);
     setAdDone(false);
