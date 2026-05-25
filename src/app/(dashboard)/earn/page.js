@@ -186,29 +186,46 @@ export default function EarnPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[#F59E0B] font-bold text-sm">+1 VERSE</span>
-                    <button
-                      onClick={() => handleSponsoredClick(link)}
-                      disabled={isClicked || isLoading || clickEarned >= CLICK_LIMIT}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:cursor-not-allowed ${
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => {
+                        if (isClicked || isLoading || clickEarned >= CLICK_LIMIT) {
+                          e.preventDefault();
+                          if (clickEarned >= CLICK_LIMIT) toast.error('Aaj ki limit poori ho gayi!');
+                          return;
+                        }
+                        // Real anchor click — Monetag OnClick trigger hoga
+                        setClickLoading(link.id);
+                        fetch('/api/earn/sponsored-click', {
+                          method: 'POST',
+                          headers: authHeader(),
+                        })
+                          .then((r) => r.json())
+                          .then((data) => {
+                            if (!data.success) { toast.error(data.error || 'Error'); return; }
+                            setClickEarned(data.daily_earned);
+                            setClickedLinks((prev) => ({ ...prev, [link.id]: true }));
+                            toast.success(`+1 VERSE mila! 🎉`);
+                          })
+                          .catch(() => toast.error('Error aya'))
+                          .finally(() => setClickLoading(null));
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                         isClicked
-                          ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30'
-                          : 'bg-[#F59E0B] hover:bg-[#D97706] text-black disabled:opacity-50'
+                          ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 pointer-events-none'
+                          : 'bg-[#F59E0B] hover:bg-[#D97706] text-black'
                       }`}
                     >
                       {isLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : isClicked ? (
-                        <>
-                          <CheckCircle className="w-3 h-3" />
-                          Done
-                        </>
+                        <><CheckCircle className="w-3 h-3" />Done</>
                       ) : (
-                        <>
-                          <ExternalLink className="w-3 h-3" />
-                          Visit
-                        </>
+                        <><ExternalLink className="w-3 h-3" />Visit</>
                       )}
-                    </button>
+                    </a>
                   </div>
                 </div>
               );
