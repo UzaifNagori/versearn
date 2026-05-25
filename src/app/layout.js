@@ -30,6 +30,14 @@ export default function RootLayout({ children }) {
       lang="ur"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Google AdSense — must be in head for verification */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9139516758998452"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[#0F0F0F] text-[#E5E7EB]">
         <Toaster
           position="top-right"
@@ -63,14 +71,7 @@ export default function RootLayout({ children }) {
         {/* OnClick + InPage — sirf dashboard pages pe */}
         <MonatagAds />
         {/* Adsterra Social Bar + Popunder — sirf adsterra page pe */}
-        <AdsterraAds />
-        {/* Google AdSense Verification */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9139516758998452"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />      </body>
+        <AdsterraAds />      </body>
     </html>
   );
 }
