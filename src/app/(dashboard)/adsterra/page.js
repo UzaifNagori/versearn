@@ -7,7 +7,7 @@ import { authHeader } from '@/lib/auth';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const AD_BUTTONS = Array.from({ length: 50 }, (_, i) => ({ id: i + 1 }));
-const ADSTERRA_DIRECT_LINK = 'https://www.highperformanceformat.com/d9ae3222809e2c23a17ab463e86c869e/invoke.js';
+const ADSTERRA_DIRECT_LINK = 'https://omg10.com/4/11057179';
 const CLICK_LIMIT = 500;
 const VERSE_PER_CLICK = 0.5;
 
