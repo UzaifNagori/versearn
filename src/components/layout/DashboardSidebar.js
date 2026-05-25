@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Coins, Image, Store, ArrowDownToLine, Receipt, User, X } from 'lucide-react';
+import { LayoutDashboard, Coins, Image, Store, ArrowDownToLine, Receipt, User, X, Zap } from 'lucide-react';
 import VerseBalance from '@/components/ui/VerseBalance';
 import { mockUser } from '@/lib/mockData';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { label: 'Click & Earn', icon: Coins, href: '/earn' },
+  { label: 'Adsterra Earn', icon: Zap, href: '/adsterra' },
   { label: 'My NFTs', icon: Image, href: '/nft' },
   { label: 'Marketplace', icon: Store, href: '/marketplace' },
   { label: 'Withdraw', icon: ArrowDownToLine, href: '/withdraw' },
