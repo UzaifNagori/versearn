@@ -26,6 +26,7 @@ const CLICK_BUTTONS = Array.from({ length: 50 }, (_, i) => ({
 
 const AD_LIMIT = 100;
 const CLICK_LIMIT = 500;
+const MONETAG_DIRECT_LINK = 'https://omg10.com/4/11057179';
 
 export default function EarnPage() {
   const [loading, setLoading] = useState(true);
@@ -57,6 +58,8 @@ export default function EarnPage() {
 
   const startAd = () => {
     if (adsEarned >= AD_LIMIT) { toast.error('Aaj ki ad limit poori ho gayi!'); return; }
+    // Real Monetag Direct Link ad open karo
+    window.open(MONETAG_DIRECT_LINK, '_blank');
     setAdWatching(true);
     setAdTimer(30);
     setAdDone(false);
@@ -220,19 +223,20 @@ export default function EarnPage() {
           </div>
           <div>
             <h2 className="text-white font-bold text-lg">Watch Ads</h2>
-            <p className="text-[#9CA3AF] text-sm">Har ad = 1 VERSE</p>
+            <p className="text-[#9CA3AF] text-sm">Har ad = 0.5 VERSE</p>
           </div>
           <div className="ml-auto text-right">
             <p className="text-[#F59E0B] font-bold">{adsEarned}/{AD_LIMIT}</p>
             <p className="text-[#9CA3AF] text-xs">VERSE aaj</p>
           </div>
         </div>
-        <div className="border-2 border-dashed border-[#2D2D4E] rounded-xl h-48 flex items-center justify-center mb-4 bg-[#0F0F1A]">
+        <div className="border-2 border-dashed border-[#2D2D4E] rounded-xl h-48 flex items-center justify-center mb-4 bg-[#0F0F1A] relative overflow-hidden">
           {adWatching ? (
-            <div className="text-center">
+            <div className="text-center px-4">
               <div className="text-4xl mb-2">📺</div>
-              <p className="text-white font-medium">Ad chal raha hai...</p>
-              <p className="text-[#F59E0B] text-2xl font-black mt-2">{adTimer}s</p>
+              <p className="text-white font-medium">Ad naye tab mein khul gaya!</p>
+              <p className="text-[#9CA3AF] text-sm mt-1">Wahan ad dekho — yahan timer chal raha hai</p>
+              <p className="text-[#F59E0B] text-3xl font-black mt-3">{adTimer}s</p>
             </div>
           ) : adDone ? (
             <div className="text-center">
@@ -257,7 +261,7 @@ export default function EarnPage() {
         <button onClick={startAd} disabled={adWatching || adsEarned >= AD_LIMIT}
           className="w-full py-3 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
           <Play className="w-4 h-4" />
-          {adWatching ? `${adTimer}s baad VERSE milega...` : adsEarned >= AD_LIMIT ? 'Limit poori ho gayi' : 'Ad Dekho (+1 VERSE)'}
+          {adWatching ? `${adTimer}s baad VERSE milega...` : adsEarned >= AD_LIMIT ? 'Limit poori ho gayi' : 'Ad Dekho (+0.5 VERSE)'}
         </button>
       </div>
 
