@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Tv, Calendar, ClipboardList, Footprints, CheckCircle, Play, Smartphone } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Tv, Calendar, ClipboardList, Footprints, CheckCircle, Play, Smartphone, MousePointerClick, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authHeader } from '@/lib/auth';
 import Modal from '@/components/ui/Modal';
@@ -13,7 +13,17 @@ const MOCK_SURVEYS = [
   { id: 's3', title: 'Mobile App Preferences', reward: 10, estimated_minutes: 3, category: 'Mobile' },
 ];
 
+// Sponsored links — yeh click karne pe ad new tab mein khulega + VERSE milega
+const SPONSORED_LINKS = [
+  { id: 1, title: 'Daraz Pakistan Deals', description: 'Best online shopping deals', emoji: '🛒' },
+  { id: 2, title: 'Jazz Cash Offer', description: 'Mobile banking rewards', emoji: '💳' },
+  { id: 3, title: 'Easypaisa Cashback', description: 'Get cashback on payments', emoji: '💰' },
+  { id: 4, title: 'OLX Pakistan', description: 'Buy & sell anything', emoji: '📦' },
+  { id: 5, title: 'Foodpanda Discount', description: 'Food delivery deals', emoji: '🍔' },
+];
+
 const AD_LIMIT = 50;
+const CLICK_LIMIT = 20;
 
 export default function EarnPage() {
   const [loading, setLoading] = useState(true);
@@ -24,6 +34,9 @@ export default function EarnPage() {
   const [adTimer, setAdTimer] = useState(30);
   const [adDone, setAdDone] = useState(false);
   const [surveyModal, setSurveyModal] = useState(null);
+  const [clickEarned, setClickEarned] = useState(0);
+  const [clickLoading, setClickLoading] = useState(null);
+  const [clickedLinks, setClickedLinks] = useState({});
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -52,7 +65,6 @@ export default function EarnPage() {
       timerRef.current = setTimeout(() => setAdTimer((t) => t - 1), 1000);
     } else if (adWatching && adTimer === 0) {
       setAdWatching(false);
-      // Call real API
       fetch('/api/earn/ad-complete', { method: 'POST', headers: authHeader() })
         .then((r) => r.json())
         .then((data) => {
@@ -84,10 +96,132 @@ export default function EarnPage() {
     setSurveyModal(null);
   };
 
+  // Sponsored link click handler
+  const handleSponsoredClick = useCallback(async (link) => {
+    if (clickEarned >= CLICK_LIMIT) {
+      toast.error('Aaj ki click limit poori ho gayi!');
+      return;
+    }
+    if (clickedLinks[link.id]) {
+      toast.error('Yeh link aaj pehle click kar chuke ho');
+      return;
+    }
+
+    setClickLoading(link.id);
+
+    try {
+      const res = await fetch('/api/earn/sponsored-click', {
+        method: 'POST',
+        headers: authHeader(),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || 'Error aya');
+        return;
+      }
+
+      // VERSE credit ho gaya — ab ad open karo
+      setClickEarned(data.daily_earned);
+      setClickedLinks((prev) => ({ ...prev, [link.id]: true }));
+      toast.success(`+1 VERSE mila! 🎉 (${data.daily_remaining} clicks baaki)`);
+
+      // Ad new tab mein open karo (Monetag OnClick trigger)
+      window.open('about:blank', '_blank');
+
+    } catch {
+      toast.error('Error aya');
+    } finally {
+      setClickLoading(null);
+    }
+  }, [clickEarned, clickedLinks]);
+
   if (loading) return <div className="flex items-center justify-center h-64"><LoadingSpinner size="lg" /></div>;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
+
+      {/* Sponsored Links — Click to Earn */}
+      <div className="bg-[#1A1A2E] border border-[#2D2D4E] rounded-xl p-6 shadow-lg shadow-purple-900/20">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-[#F59E0B]/20 flex items-center justify-center">
+            <MousePointerClick className="w-5 h-5 text-[#F59E0B]" />
+          </div>
+          <div>
+            <h2 className="text-white font-bold text-lg">Sponsored Links</h2>
+            <p className="text-[#9CA3AF] text-sm">Har link click = 1 VERSE</p>
+          </div>
+          <div className="ml-auto text-right">
+            <p className="text-[#F59E0B] font-bold">{clickEarned}/{CLICK_LIMIT}</p>
+            <p className="text-[#9CA3AF] text-xs">VERSE aaj</p>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-4">
+          <div className="h-1.5 bg-[#0F0F1A] rounded-full overflow-hidden">
+            <div className="h-full bg-[#F59E0B] rounded-full transition-all"
+              style={{ width: `${Math.min(100, (clickEarned / CLICK_LIMIT) * 100)}%` }} />
+          </div>
+        </div>
+
+        {clickEarned >= CLICK_LIMIT ? (
+          <div className="text-center py-4 bg-[#0F0F1A] rounded-xl border border-[#2D2D4E]">
+            <p className="text-[#10B981] font-bold">Aaj ki limit poori ho gayi! ✅</p>
+            <p className="text-[#9CA3AF] text-sm mt-1">Kal wapas aao aur aur VERSE kamao</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {SPONSORED_LINKS.map((link) => {
+              const isClicked = !!clickedLinks[link.id];
+              const isLoading = clickLoading === link.id;
+              return (
+                <div key={link.id}
+                  className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                    isClicked
+                      ? 'bg-[#10B981]/5 border-[#10B981]/20 opacity-60'
+                      : 'bg-[#0F0F1A] border-[#2D2D4E] hover:border-[#F59E0B]/40'
+                  }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{link.emoji}</span>
+                    <div>
+                      <p className="text-white font-medium text-sm">{link.title}</p>
+                      <p className="text-[#9CA3AF] text-xs">{link.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#F59E0B] font-bold text-sm">+1 VERSE</span>
+                    <button
+                      onClick={() => handleSponsoredClick(link)}
+                      disabled={isClicked || isLoading || clickEarned >= CLICK_LIMIT}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:cursor-not-allowed ${
+                        isClicked
+                          ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30'
+                          : 'bg-[#F59E0B] hover:bg-[#D97706] text-black disabled:opacity-50'
+                      }`}
+                    >
+                      {isLoading ? (
+                        <LoadingSpinner size="sm" />
+                      ) : isClicked ? (
+                        <>
+                          <CheckCircle className="w-3 h-3" />
+                          Done
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="w-3 h-3" />
+                          Visit
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Watch Ads */}
       <div className="bg-[#1A1A2E] border border-[#2D2D4E] rounded-xl p-6 shadow-lg shadow-purple-900/20">
         <div className="flex items-center gap-3 mb-5">
@@ -125,7 +259,8 @@ export default function EarnPage() {
         {adWatching && (
           <div className="mb-4">
             <div className="h-2 bg-[#0F0F1A] rounded-full overflow-hidden">
-              <div className="h-full bg-[#7C3AED] rounded-full transition-all duration-1000" style={{ width: `${((30 - adTimer) / 30) * 100}%` }} />
+              <div className="h-full bg-[#7C3AED] rounded-full transition-all duration-1000"
+                style={{ width: `${((30 - adTimer) / 30) * 100}%` }} />
             </div>
           </div>
         )}
