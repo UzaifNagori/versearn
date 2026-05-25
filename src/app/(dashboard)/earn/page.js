@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Tv, Calendar, ClipboardList, Footprints, CheckCircle, Play, Smartphone, MousePointerClick, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Calendar, ClipboardList, Footprints, CheckCircle, Smartphone, MousePointerClick, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { authHeader } from '@/lib/auth';
 import Modal from '@/components/ui/Modal';
@@ -13,75 +13,34 @@ const MOCK_SURVEYS = [
   { id: 's3', title: 'Mobile App Preferences', reward: 10, estimated_minutes: 3, category: 'Mobile' },
 ];
 
-// 50 click buttons shown, 500 total limit
-const CLICK_BUTTONS = Array.from({ length: 50 }, (_, i) => ({
-  id: i + 1,
-  url: [
-    'https://daraz.pk', 'https://olx.com.pk', 'https://foodpanda.pk',
-    'https://jazzcash.com.pk', 'https://easypaisa.com.pk',
-    'https://pakwheels.com', 'https://zameen.com', 'https://goto.com.pk',
-    'https://telemart.pk', 'https://shophive.com',
-  ][i % 10],
-}));
-
-const AD_LIMIT = 100;
-const CLICK_LIMIT = 500;
+// 50 ad buttons — each opens Monetag Direct Link
+const AD_BUTTONS = Array.from({ length: 50 }, (_, i) => ({ id: i + 1 }));
 const MONETAG_DIRECT_LINK = 'https://omg10.com/4/11057179';
+
+const CLICK_LIMIT = 500;
 
 export default function EarnPage() {
   const [loading, setLoading] = useState(true);
   const [adsEarned, setAdsEarned] = useState(0);
   const [surveyEarned, setSurveyEarned] = useState(0);
   const [checkinDone, setCheckinDone] = useState(false);
-  const [adWatching, setAdWatching] = useState(false);
-  const [adTimer, setAdTimer] = useState(30);
-  const [adDone, setAdDone] = useState(false);
   const [surveyModal, setSurveyModal] = useState(null);
-  const [clickEarned, setClickEarned] = useState(0);
-  const [clickLoading, setClickLoading] = useState(null);
-  const [clickedLinks, setClickedLinks] = useState({});
-  const timerRef = useRef(null);
+  const [clickedAds, setClickedAds] = useState({});
+  const [adLoading, setAdLoading] = useState(null);
 
   useEffect(() => {
     fetch('/api/earn/daily-stats', { headers: authHeader() })
       .then((r) => r.json())
       .then((data) => {
         if (data.daily) {
-          setAdsEarned(data.daily.ads_earned || 0);
-          setSurveyEarned(data.daily.survey_earned || 0);
+          setAdsEarned(Number(data.daily.ads_earned) || 0);
+          setSurveyEarned(Number(data.daily.survey_earned) || 0);
           setCheckinDone(!!data.daily.checkin_done);
         }
       })
       .catch(() => toast.error('Stats load nahi ho sake'))
       .finally(() => setLoading(false));
   }, []);
-
-  const startAd = () => {
-    if (adsEarned >= AD_LIMIT) { toast.error('Aaj ki ad limit poori ho gayi!'); return; }
-    // Direct Link ad open karo new tab mein
-    window.open(MONETAG_DIRECT_LINK, '_blank');
-    setAdWatching(true);
-    setAdTimer(30);
-    setAdDone(false);
-  };
-
-  useEffect(() => {
-    if (adWatching && adTimer > 0) {
-      timerRef.current = setTimeout(() => setAdTimer((t) => t - 1), 1000);
-    } else if (adWatching && adTimer === 0) {
-      setAdWatching(false);
-      fetch('/api/earn/ad-complete', { method: 'POST', headers: authHeader() })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.error) { toast.error(data.error); return; }
-          setAdDone(true);
-          setAdsEarned((prev) => prev + 1);
-          toast.success('+1 VERSE mila! 🎉');
-        })
-        .catch(() => toast.error('Ad complete nahi ho saka'));
-    }
-    return () => clearTimeout(timerRef.current);
-  }, [adWatching, adTimer]);
 
   const handleCheckin = () => {
     if (checkinDone) return;
@@ -90,117 +49,91 @@ export default function EarnPage() {
       .then((data) => {
         if (data.error) { toast.error(data.error); return; }
         setCheckinDone(true);
-        toast.success('+5 VERSE mila! Aaj ka check-in ho gaya ✅');
+        toast.success('+5 VERSE mila! ✅');
       })
       .catch(() => toast.error('Check-in fail ho gaya'));
   };
 
   const handleSurveyComplete = () => {
     if (!surveyModal) return;
-    toast.success(`+${surveyModal.reward} VERSE mila! Survey complete! 🎉`);
+    toast.success(`+${surveyModal.reward} VERSE mila! 🎉`);
     setSurveyModal(null);
   };
 
-  // Sponsored link click handler
-  const handleSponsoredClick = useCallback((link) => {
-    if (clickEarned >= CLICK_LIMIT) {
-      toast.error('Aaj ki click limit poori ho gayi!');
-      return;
-    }
-    if (clickedLinks[link.id]) {
-      toast.error('Yeh link aaj pehle click kar chuke ho');
-      return;
-    }
+  // Ad button click — opens real Monetag ad + credits VERSE
+  const handleAdClick = useCallback((btn) => {
+    if (clickedAds[btn.id]) return;
+    if (adsEarned >= CLICK_LIMIT) { toast.error('Aaj ki limit poori ho gayi!'); return; }
 
-    // PEHLE window open karo — user gesture pe hona chahiye
-    // Popup blocker bypass hoga
-    window.open(link.url, '_blank');
-
-    // PHIR backend call karo VERSE credit ke liye
-    setClickLoading(link.id);
-    fetch('/api/earn/sponsored-click', {
-      method: 'POST',
-      headers: authHeader(),
-    })
+    setAdLoading(btn.id);
+    fetch('/api/earn/ad-complete', { method: 'POST', headers: authHeader() })
       .then((r) => r.json())
       .then((data) => {
-        if (!data.success) {
-          toast.error(data.error || 'Error aya');
-          return;
-        }
-        setClickEarned(data.daily_earned);
-        setClickedLinks((prev) => ({ ...prev, [link.id]: true }));
-        toast.success(`+1 VERSE mila! 🎉 (${data.daily_remaining} clicks baaki)`);
+        if (data.error) { toast.error(data.error); return; }
+        setAdsEarned(Number(data.daily_earned || adsEarned + 0.5));
+        setClickedAds((prev) => ({ ...prev, [btn.id]: true }));
+        toast.success('+0.5 VERSE mila! 🎉');
       })
       .catch(() => toast.error('Error aya'))
-      .finally(() => setClickLoading(null));
-  }, [clickEarned, clickedLinks]);
+      .finally(() => setAdLoading(null));
+  }, [clickedAds, adsEarned]);
 
   if (loading) return <div className="flex items-center justify-center h-64"><LoadingSpinner size="lg" /></div>;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
 
-      {/* Sponsored Clicks — Click to Earn */}
+      {/* Ad Grid — Click to Earn */}
       <div className="bg-[#1A1A2E] border border-[#2D2D4E] rounded-xl p-6 shadow-lg shadow-purple-900/20">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-[#F59E0B]/20 flex items-center justify-center">
-            <MousePointerClick className="w-5 h-5 text-[#F59E0B]" />
+          <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/20 flex items-center justify-center">
+            <Zap className="w-5 h-5 text-[#7C3AED]" />
           </div>
           <div>
-            <h2 className="text-white font-bold text-lg">Click to Earn</h2>
-            <p className="text-[#9CA3AF] text-sm">Har click = 0.1 VERSE · Max 500 clicks/day</p>
+            <h2 className="text-white font-bold text-lg">Ads Dekho — VERSE Kamao</h2>
+            <p className="text-[#9CA3AF] text-sm">Har ad click = 0.5 VERSE · Max 500/day</p>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-[#F59E0B] font-bold">{clickEarned}/{CLICK_LIMIT}</p>
+            <p className="text-[#7C3AED] font-bold">{adsEarned}/{CLICK_LIMIT}</p>
             <p className="text-[#9CA3AF] text-xs">VERSE aaj</p>
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress */}
         <div className="mb-5">
           <div className="h-1.5 bg-[#0F0F1A] rounded-full overflow-hidden">
-            <div className="h-full bg-[#F59E0B] rounded-full transition-all"
-              style={{ width: `${Math.min(100, (clickEarned / CLICK_LIMIT) * 100)}%` }} />
+            <div className="h-full bg-[#7C3AED] rounded-full transition-all"
+              style={{ width: `${Math.min(100, (adsEarned / CLICK_LIMIT) * 100)}%` }} />
           </div>
-          <p className="text-[#9CA3AF] text-xs mt-1">{CLICK_LIMIT - clickEarned} clicks baaki aaj</p>
+          <p className="text-[#9CA3AF] text-xs mt-1">{Math.max(0, CLICK_LIMIT - adsEarned)} clicks baaki aaj</p>
         </div>
 
-        {clickEarned >= CLICK_LIMIT ? (
+        {adsEarned >= CLICK_LIMIT ? (
           <div className="text-center py-6 bg-[#0F0F1A] rounded-xl border border-[#2D2D4E]">
+            <CheckCircle className="w-10 h-10 text-[#10B981] mx-auto mb-2" />
             <p className="text-[#10B981] font-bold text-lg">Aaj ki limit poori! ✅</p>
-            <p className="text-[#9CA3AF] text-sm">Kal wapas aao — 500 aur clicks milenge</p>
+            <p className="text-[#9CA3AF] text-sm mt-1">Kal wapas aao</p>
           </div>
         ) : (
           <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-            {CLICK_BUTTONS.map((btn) => {
-              const isClicked = !!clickedLinks[btn.id];
-              const isLoading = clickLoading === btn.id;
+            {AD_BUTTONS.map((btn) => {
+              const isClicked = !!clickedAds[btn.id];
+              const isLoading = adLoading === btn.id;
               return (
                 <a
                   key={btn.id}
-                  href={isClicked ? undefined : btn.url}
+                  href={isClicked ? undefined : MONETAG_DIRECT_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     if (isClicked) { e.preventDefault(); return; }
-                    if (clickEarned >= CLICK_LIMIT) { e.preventDefault(); toast.error('Limit poori ho gayi!'); return; }
-                    setClickLoading(btn.id);
-                    fetch('/api/earn/sponsored-click', { method: 'POST', headers: authHeader() })
-                      .then((r) => r.json())
-                      .then((data) => {
-                        if (!data.success) { toast.error(data.error || 'Error'); return; }
-                        setClickEarned(data.daily_earned);
-                        setClickedLinks((prev) => ({ ...prev, [btn.id]: true }));
-                        toast.success('+0.1 VERSE mila!');
-                      })
-                      .catch(() => toast.error('Error aya'))
-                      .finally(() => setClickLoading(null));
+                    if (adsEarned >= CLICK_LIMIT) { e.preventDefault(); toast.error('Limit poori!'); return; }
+                    handleAdClick(btn);
                   }}
                   className={`aspect-square flex items-center justify-center rounded-lg text-xs font-bold transition-all border ${
                     isClicked
-                      ? 'bg-[#10B981]/20 border-[#10B981]/40 text-[#10B981] cursor-default'
-                      : 'bg-[#0F0F1A] border-[#2D2D4E] text-[#9CA3AF] hover:border-[#F59E0B] hover:text-[#F59E0B] hover:bg-[#F59E0B]/10 cursor-pointer'
+                      ? 'bg-[#7C3AED]/20 border-[#7C3AED]/40 text-[#7C3AED] cursor-default'
+                      : 'bg-[#0F0F1A] border-[#2D2D4E] text-[#9CA3AF] hover:border-[#7C3AED] hover:text-[#7C3AED] hover:bg-[#7C3AED]/10 cursor-pointer'
                   }`}
                 >
                   {isLoading ? '...' : isClicked ? '✓' : btn.id}
@@ -209,61 +142,9 @@ export default function EarnPage() {
             })}
           </div>
         )}
-
-        <p className="text-[#9CA3AF] text-xs mt-4 text-center">
-          💡 Har click pe sponsored content khulega aur aapko 0.1 VERSE milega
+        <p className="text-[#9CA3AF] text-xs mt-3 text-center">
+          💡 Har button click pe sponsored ad khulega + 0.5 VERSE milega
         </p>
-      </div>
-
-      {/* Watch Ads */}
-      <div className="bg-[#1A1A2E] border border-[#2D2D4E] rounded-xl p-6 shadow-lg shadow-purple-900/20">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-[#7C3AED]/20 flex items-center justify-center">
-            <Tv className="w-5 h-5 text-[#7C3AED]" />
-          </div>
-          <div>
-            <h2 className="text-white font-bold text-lg">Watch Ads</h2>
-            <p className="text-[#9CA3AF] text-sm">Har ad = 0.5 VERSE</p>
-          </div>
-          <div className="ml-auto text-right">
-            <p className="text-[#F59E0B] font-bold">{adsEarned}/{AD_LIMIT}</p>
-            <p className="text-[#9CA3AF] text-xs">VERSE aaj</p>
-          </div>
-        </div>
-        <div className="border-2 border-dashed border-[#2D2D4E] rounded-xl h-48 flex items-center justify-center mb-4 bg-[#0F0F1A]">
-          {adWatching ? (
-            <div className="text-center px-4">
-              <div className="text-4xl mb-2">📺</div>
-              <p className="text-white font-medium">Ad naye tab mein khul gaya!</p>
-              <p className="text-[#9CA3AF] text-sm mt-1">Wahan ad dekho — yahan timer chal raha hai</p>
-              <p className="text-[#F59E0B] text-3xl font-black mt-3">{adTimer}s</p>
-            </div>
-          ) : adDone ? (
-            <div className="text-center">
-              <CheckCircle className="w-12 h-12 text-[#10B981] mx-auto mb-2" />
-              <p className="text-[#10B981] font-bold">+0.5 VERSE mila!</p>
-            </div>
-          ) : (
-            <div className="text-center text-[#9CA3AF]">
-              <Tv className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Button click karo — ad naye tab mein khulega</p>
-              <p className="text-xs mt-1 text-[#7C3AED]">30 second baad VERSE milega</p>
-            </div>
-          )}
-        </div>
-        {adWatching && (
-          <div className="mb-4">
-            <div className="h-2 bg-[#0F0F1A] rounded-full overflow-hidden">
-              <div className="h-full bg-[#7C3AED] rounded-full transition-all duration-1000"
-                style={{ width: `${((30 - adTimer) / 30) * 100}%` }} />
-            </div>
-          </div>
-        )}
-        <button onClick={startAd} disabled={adWatching || adsEarned >= AD_LIMIT}
-          className="w-full py-3 bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
-          <Play className="w-4 h-4" />
-          {adWatching ? `${adTimer}s baad VERSE milega...` : adsEarned >= AD_LIMIT ? 'Limit poori ho gayi' : 'Ad Dekho (+0.5 VERSE)'}
-        </button>
       </div>
 
       {/* Daily Check-in */}
@@ -276,17 +157,11 @@ export default function EarnPage() {
             <h2 className="text-white font-bold text-lg">Daily Check-in</h2>
             <p className="text-[#9CA3AF] text-sm">Roz check-in karo aur bonus pao</p>
           </div>
-        </div>
-        <div className="text-center py-4">
-          <Calendar className="w-16 h-16 mx-auto mb-3 text-[#F59E0B]" />
-          {checkinDone ? (
-            <div>
-              <p className="text-[#10B981] font-bold text-lg">Aaj ka check-in ho gaya! ✅</p>
-              <p className="text-[#9CA3AF] text-sm mt-1">+5 VERSE mila</p>
-            </div>
-          ) : (
-            <p className="text-white font-medium">Aaj ka check-in karo aur 5 VERSE pao!</p>
-          )}
+          <div className="ml-auto">
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${checkinDone ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-[#F59E0B]/20 text-[#F59E0B]'}`}>
+              {checkinDone ? '+5 Done ✓' : '+5 VERSE'}
+            </span>
+          </div>
         </div>
         <button onClick={handleCheckin} disabled={checkinDone}
           className="w-full py-3 bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold rounded-lg transition-colors">
@@ -355,9 +230,8 @@ export default function EarnPage() {
           <div className="space-y-4">
             <div className="bg-[#0F0F1A] border border-[#2D2D4E] rounded-lg p-4">
               <p className="text-[#9CA3AF] text-sm">Reward: <span className="text-[#F59E0B] font-bold">+{surveyModal.reward} VERSE</span></p>
-              <p className="text-[#9CA3AF] text-sm mt-1">Estimated time: ~{surveyModal.estimated_minutes} minutes</p>
+              <p className="text-[#9CA3AF] text-sm mt-1">~{surveyModal.estimated_minutes} minutes</p>
             </div>
-            <p className="text-[#9CA3AF] text-sm">Yeh ek mock survey hai. Real surveys CPX Research se aayenge.</p>
             <button onClick={handleSurveyComplete}
               className="w-full py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold rounded-lg transition-colors">
               Survey Submit Karo (+{surveyModal?.reward} VERSE)
