@@ -15,11 +15,11 @@ const MOCK_SURVEYS = [
 
 // Sponsored links — yeh click karne pe ad new tab mein khulega + VERSE milega
 const SPONSORED_LINKS = [
-  { id: 1, title: 'Daraz Pakistan Deals', description: 'Best online shopping deals', emoji: '🛒' },
-  { id: 2, title: 'Jazz Cash Offer', description: 'Mobile banking rewards', emoji: '💳' },
-  { id: 3, title: 'Easypaisa Cashback', description: 'Get cashback on payments', emoji: '💰' },
-  { id: 4, title: 'OLX Pakistan', description: 'Buy & sell anything', emoji: '📦' },
-  { id: 5, title: 'Foodpanda Discount', description: 'Food delivery deals', emoji: '🍔' },
+  { id: 1, title: 'Daraz Pakistan Deals', description: 'Best online shopping deals', emoji: '🛒', url: 'https://daraz.pk' },
+  { id: 2, title: 'Jazz Cash Offer', description: 'Mobile banking rewards', emoji: '💳', url: 'https://jazzcash.com.pk' },
+  { id: 3, title: 'Easypaisa Cashback', description: 'Get cashback on payments', emoji: '💰', url: 'https://easypaisa.com.pk' },
+  { id: 4, title: 'OLX Pakistan', description: 'Buy & sell anything', emoji: '📦', url: 'https://olx.com.pk' },
+  { id: 5, title: 'Foodpanda Discount', description: 'Food delivery deals', emoji: '🍔', url: 'https://foodpanda.pk' },
 ];
 
 const AD_LIMIT = 50;
@@ -121,13 +121,14 @@ export default function EarnPage() {
         return;
       }
 
-      // VERSE credit ho gaya — ab ad open karo
+      // VERSE credit ho gaya — ab actual URL open karo
+      // Monetag OnClick script automatically trigger hoga is click pe
       setClickEarned(data.daily_earned);
       setClickedLinks((prev) => ({ ...prev, [link.id]: true }));
       toast.success(`+1 VERSE mila! 🎉 (${data.daily_remaining} clicks baaki)`);
 
-      // Ad new tab mein open karo (Monetag OnClick trigger)
-      window.open('about:blank', '_blank');
+      // Actual sponsored URL open karo — Monetag OnClick apne aap trigger hoga
+      window.open(link.url, '_blank', 'noopener');
 
     } catch {
       toast.error('Error aya');
