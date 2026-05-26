@@ -179,9 +179,9 @@ function RegisterForm() {
             />
             <span className="text-sm text-[#9CA3AF]">
               Main{' '}
-              <Link href="#" className="text-[#7C3AED] hover:underline">Terms of Service</Link>
+              <Link href="/terms" className="text-[#7C3AED] hover:underline">Terms of Service</Link>
               {' '}aur{' '}
-              <Link href="#" className="text-[#7C3AED] hover:underline">Privacy Policy</Link>
+              <Link href="/privacy-policy" className="text-[#7C3AED] hover:underline">Privacy Policy</Link>
               {' '}se agree karta/karti hoon
             </span>
           </label>

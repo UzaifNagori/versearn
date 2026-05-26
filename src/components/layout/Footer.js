@@ -25,9 +25,9 @@ export default function Footer() {
             <ul className="space-y-2">
               {[
                 { label: 'About Us', href: '#' },
-                { label: 'Privacy Policy', href: '#' },
-                { label: 'Terms of Service', href: '#' },
-                { label: 'Contact', href: '#' },
+                { label: 'Privacy Policy', href: '/privacy-policy' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Contact', href: 'mailto:uzaifngaori56@gmail.com' },
               ].map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-[#9CA3AF] hover:text-[#7C3AED] text-sm transition-colors">
