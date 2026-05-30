@@ -11,16 +11,10 @@ export default function AdsterraAds() {
 
   return (
     <>
-      {/* Adsterra Social Bar */}
+      {/* Adsterra Social Bar only — Popunder removed (was opening ads on every click) */}
       <Script
         id="adsterra-socialbar"
         src="https://pl29552941.effectivecpmnetwork.com/bb/ce/36/bbce36facad487932406e69afc808e4c.js"
-        strategy="afterInteractive"
-      />
-      {/* Adsterra Popunder */}
-      <Script
-        id="adsterra-popunder"
-        src="https://pl29552942.effectivecpmnetwork.com/64/40/34/6440343086bdd0f67f1d72e4a861f8bd.js"
         strategy="afterInteractive"
       />
     </>
