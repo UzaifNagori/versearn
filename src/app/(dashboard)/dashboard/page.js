@@ -7,6 +7,7 @@ import { authHeader } from '@/lib/auth';
 import StatCard from '@/components/ui/StatCard';
 import TransactionRow from '@/components/ui/TransactionRow';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import AdsterraBanner from '@/components/ui/AdsterraBanner';
 
 export default function DashboardPage() {
   const [data, setData] = useState(null);
@@ -115,6 +116,12 @@ export default function DashboardPage() {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* Adsterra Banner Ad */}
+      <div className="bg-[#1A1A2E] border border-[#2D2D4E] rounded-xl p-4 flex flex-col items-center shadow-lg shadow-purple-900/20">
+        <p className="text-[#9CA3AF] text-xs mb-3">Sponsored Advertisement</p>
+        <AdsterraBanner />
       </div>
 
       {/* Recent Transactions */}
